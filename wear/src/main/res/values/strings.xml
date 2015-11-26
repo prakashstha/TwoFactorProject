@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">TwoFactorAuthentication</string>
-    <string name="hello_round">Hello Round World!</string>
-    <string name="hello_square">Hello Square World!</string>
-
-    <string name="Start">START</string>
-    <string name="Stop">STOP</string>
-
-</resources>

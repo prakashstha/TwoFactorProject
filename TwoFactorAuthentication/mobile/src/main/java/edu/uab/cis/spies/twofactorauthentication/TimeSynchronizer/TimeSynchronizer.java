@@ -24,11 +24,11 @@ public class TimeSynchronizer{
     {
         serverTimeSynchronizer = new ServerTimeSynchronizer(threadGroup, fileUtility);
         serverTimeSynchronizer.setDaemon(true);
-        serverTimeSynchronizer.setPriority(Thread.MAX_PRIORITY);
+        serverTimeSynchronizer.setPriority(Thread.NORM_PRIORITY);
 
         wearTimeSynchronizer = new WearTimeSynchronizer(threadGroup, outboundMsgQ, fileUtility);
         wearTimeSynchronizer.setDaemon(true);
-        wearTimeSynchronizer.setPriority(Thread.MAX_PRIORITY);
+        wearTimeSynchronizer.setPriority(Thread.NORM_PRIORITY);
 
     }
 
@@ -46,7 +46,7 @@ public class TimeSynchronizer{
            interruptTimeSync();
        }
        serverTimeSynchronizer.start();
-       wearTimeSynchronizer.start();
+       //wearTimeSynchronizer.start();
 
 //        TestTimeSync testTimeSync = new TestTimeSync();
 //        testTimeSync.setPriority(Thread.NORM_PRIORITY);

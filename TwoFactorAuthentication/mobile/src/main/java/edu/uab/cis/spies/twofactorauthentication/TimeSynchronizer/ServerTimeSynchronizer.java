@@ -70,6 +70,7 @@ public class ServerTimeSynchronizer extends TwoFactorThread {
 
         try {
             serverTimeSyncFilePath = fileUtility.getServerTimeSyncFilePath();
+            Log.e(LOG_TAG, "Server time sync file path" + serverTimeSyncFilePath);
             if (serverTimeSyncFilePath != null && serverTimeSyncFilePath.length() != 0) {
                 bfrWriter = new BufferedWriter(new FileWriter(serverTimeSyncFilePath));
             } else
@@ -105,6 +106,7 @@ public class ServerTimeSynchronizer extends TwoFactorThread {
         /*closing bufferwriter*/
         if(bfrWriter!=null){
             try {
+                bfrWriter.flush();
                 bfrWriter.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -149,6 +151,7 @@ public class ServerTimeSynchronizer extends TwoFactorThread {
                     String str = String.format(Locale.getDefault(), "%d,%d,%d,%d,%d", requestTime, responseTime, serverTime, oneWayTimeDelay, sAvgM2STimeDiff);
                     if(bfrWriter!=null) {
                         try {
+                           // Log.e(LOG_TAG, "writing: " + str);
                             bfrWriter.append(str + "\n");
                             bfrWriter.flush();
                         } catch (IOException e) {

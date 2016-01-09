@@ -127,6 +127,7 @@ public class WearTimeSynchronizer extends TwoFactorThread implements IMessageHan
         /*closing bufferwriter*/
         if(bfrWriter!=null){
             try {
+                bfrWriter.flush();
                 bfrWriter.close();
             } catch (IOException e) {
                 e.printStackTrace();

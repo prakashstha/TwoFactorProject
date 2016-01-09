@@ -117,10 +117,13 @@ public class FileUtility implements edu.uab.cis.spies.twofactorlib.common.Consta
     }
 
     public String getWearTimeSyncFilePath(){
-        return wearTimeSyncFilePath;
+        int index = findTypeIndex(WEAR_TIME_SYNC);
+        return filePathList.get(index);
     }
     public String getServerTimeSyncFilePath(){
-        return serverTimeSyncFilePath;
+        int index = findTypeIndex(SERVER_TIME_SYNC);
+        return filePathList.get(index);
+
     }
 
     /**

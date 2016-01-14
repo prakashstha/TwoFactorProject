@@ -46,7 +46,7 @@ public class TimeSynchronizer{
            interruptTimeSync();
        }
        serverTimeSynchronizer.start();
-       //wearTimeSynchronizer.start();
+       wearTimeSynchronizer.start();
 
 //        TestTimeSync testTimeSync = new TestTimeSync();
 //        testTimeSync.setPriority(Thread.NORM_PRIORITY);

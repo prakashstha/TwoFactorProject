@@ -265,7 +265,7 @@ public class AudioPlayer extends TwoFactorThread implements AudioParameters{
 		 /*File size (4 bytes)*/
         headerBuffer.putInt(totalAudioLen);
 
-        displayHeaderContent(headerBuffer);
+        //displayHeaderContent(headerBuffer);
         out.write(headerBuffer.array());
 
     }

@@ -63,6 +63,7 @@ public class WearTimeSynchronizer extends TwoFactorThread implements IMessageHan
                                 LinkedBlockingQueue<IMessage> outboundMsgQ,
                                 FileUtility fileUtility) {
         super(tGroup, LOG_TAG);
+        Log.d(LOG_TAG, "WearTimeSynchronizer constructor...");
         this.fileUtility = fileUtility;
         this.sTimeSyncMsgCounter = 0;
         this.sTimeSyncMsgCounter1 = 0;

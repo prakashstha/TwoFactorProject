@@ -364,7 +364,7 @@ public class SensorValueService extends Service implements GoogleApiClient.Conne
     private void initDataProducerConsumer(){
         initSensorValueConsumers();
         initAudioValuesConsumer();
-        registerSensorListener();
+        //registerSensorListener();
         initAudioValuesProducer();
     }
 

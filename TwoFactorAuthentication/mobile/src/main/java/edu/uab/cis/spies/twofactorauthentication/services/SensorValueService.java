@@ -443,9 +443,10 @@ public class SensorValueService extends Service implements ChannelApi.ChannelLis
         initBtChannel();
         initMessageThreads();
         initTimeSynchronizer();
-        player = new AudioPlayer(sThreadGroup,fileUtility.getTempAudioFilePath(),fileUtility.getAudioFilepath());
-        phoneAudioRecorder = new PhoneAudioRecorder(fileUtility);
-        phoneAudioRecorder.execute();
+
+        //player = new AudioPlayer(sThreadGroup,fileUtility.getTempAudioFilePath(),fileUtility.getAudioFilepath());
+        //phoneAudioRecorder = new PhoneAudioRecorder(fileUtility);
+        //phoneAudioRecorder.execute();
     }
 
     @Override

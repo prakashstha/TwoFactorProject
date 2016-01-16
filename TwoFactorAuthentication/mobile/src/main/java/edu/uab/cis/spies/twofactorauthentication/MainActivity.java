@@ -2,9 +2,11 @@
 package edu.uab.cis.spies.twofactorauthentication;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -12,6 +14,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,8 +30,12 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import java.io.IOException;
 
+import edu.uab.cis.spies.twofactorauthentication.TimeSynchronizer.ServerTimeSynchronizer;
+import edu.uab.cis.spies.twofactorauthentication.TimeSynchronizer.TimeSynchronizer;
 import edu.uab.cis.spies.twofactorauthentication.WebServer.PushToServer;
+import edu.uab.cis.spies.twofactorauthentication.gcm.GcmMessageHandler;
 import edu.uab.cis.spies.twofactorauthentication.services.SensorValueService;
+import edu.uab.cis.spies.twofactorauthentication.utility.FileUtility;
 import edu.uab.cis.spies.twofactorlib.service.ServiceMessage;
 import edu.uab.cis.spies.twofactorlib.service.ServiceSpecificDetails;
 import edu.uab.cis.spies.twofactorlib.service.ServiceState;
@@ -84,7 +91,13 @@ public class MainActivity extends Activity implements OnClickListener{
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         initializeView();
+
+
     }
+
+
+
+
     private void initializeView(){
         mBtn_getGCMid = (Button)findViewById(R.id.btnGetRegId);
         mBtn_getGCMid.setOnClickListener(this);
@@ -98,9 +111,60 @@ public class MainActivity extends Activity implements OnClickListener{
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        IntentFilter iff = new IntentFilter(GcmMessageHandler.ACTION);
+        LocalBroadcastManager.getInstance(this).registerReceiver(onNotice,iff);
+
+    }
+
+    @Override
     protected void onResume() {
         Log.d(LOG_TAG, "onResume()");
         super.onResume();
+        IntentFilter iff = new IntentFilter(GcmMessageHandler.ACTION);
+        LocalBroadcastManager.getInstance(this).registerReceiver(onNotice,iff);
+
+    }
+
+
+    /* server time synchronizer thread*/
+    private ThreadGroup sThreadGroup = new ThreadGroup("2FA MOBILE");
+    private FileUtility fileUtility = new FileUtility();
+    private ServerTimeSynchronizer serverTimeSynchronizer= new ServerTimeSynchronizer(sThreadGroup, fileUtility);
+
+
+    /* Initialize and start TimeSynchronizer thread*/
+    private void initServerTimeSynchronizer(){
+        Log.d(LOG_TAG, "intiServerTimeSynchronizer()");
+        if(serverTimeSynchronizer == null){
+            serverTimeSynchronizer = new ServerTimeSynchronizer(sThreadGroup, fileUtility);
+        }
+        if(serverTimeSynchronizer.isAlive()){
+            serverTimeSynchronizer.interrupt();
+            serverTimeSynchronizer.stop();
+            while(serverTimeSynchronizer.isAlive()){
+                try{
+                    Thread.sleep(200);
+                }catch(InterruptedException e){
+                    e.printStackTrace();
+                }
+            }
+        }
+        //serverTimeSynchronizer.setDaemon(true);
+        serverTimeSynchronizer.setPriority(Thread.MAX_PRIORITY);
+        serverTimeSynchronizer.start();
+    }
+
+    private void stopServerTimeSynchronizer(){
+        Log.d(LOG_TAG, "stopServerTimeSynchronizer()");
+        if(serverTimeSynchronizer!=null){
+            Log.d(LOG_TAG, "ServerTimeSYnc is not null");
+            if(serverTimeSynchronizer.isAlive()){
+                serverTimeSynchronizer.interrupt();
+
+            }
+        }
     }
 
     /* On start of application start the service.*/
@@ -108,10 +172,22 @@ public class MainActivity extends Activity implements OnClickListener{
     protected void onStart() {
         Log.d(LOG_TAG, "onStart()");
 
+        IntentFilter iff = new IntentFilter(GcmMessageHandler.ACTION);
+        LocalBroadcastManager.getInstance(this).registerReceiver(onNotice,iff);
+
         //recording directory from web service...
         Intent intent = getIntent();
         String recordingDir = intent.getStringExtra(edu.uab.cis.spies.twofactorauthentication.Constants.RECORDINGS_DIR);
         Log.e(LOG_TAG, "Recording Dir: " + recordingDir);
+
+        if(recordingDir == null){
+            recordingDir = String.valueOf(System.currentTimeMillis()) + "_mobile";
+        }
+
+//        fileUtility.setWorkingDir(recordingDir);
+//        fileUtility.createRecordingFiles();
+//        initServerTimeSynchronizer();
+
 
         intentToStartService = new Intent(this,SensorValueService.class);
         intentToStartService.putExtra(edu.uab.cis.spies.twofactorauthentication.Constants.RECORDINGS_DIR, recordingDir);
@@ -132,6 +208,7 @@ public class MainActivity extends Activity implements OnClickListener{
     @Override
     protected void onStop() {
         Log.d(LOG_TAG, "onStop()");
+        stopServerTimeSynchronizer();
         stopServicesIntents();
         super.onStop();
     }
@@ -139,6 +216,7 @@ public class MainActivity extends Activity implements OnClickListener{
     @Override
     protected void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
+        stopServerTimeSynchronizer();
         stopServicesIntents();
         super.onDestroy();
     }
@@ -203,8 +281,11 @@ public class MainActivity extends Activity implements OnClickListener{
                     msg = "Registration ID=" + regid;
                     Log.i("GCM", msg);
 
-                    PushToServer recordRegisteredDevice = new PushToServer();
-                    recordRegisteredDevice.execute(PushToServer.GCMDeviceRegistration, "TwoFactorAuthentication",regid);
+                    String args[] = {PushToServer.GCMDeviceRegistration, "TwoFactorAuthentication",regid};
+                    ThreadGroup tGroup = new ThreadGroup("2FA");
+                    PushToServer recordRegisteredDevice = new PushToServer(tGroup, args);
+                    recordRegisteredDevice.start();
+//                    recordRegisteredDevice.execute(PushToServer.GCMDeviceRegistration, "TwoFactorAuthentication",regid);
 
                 } catch (IOException ex) {
                     msg = "Error :" + ex.getMessage();
@@ -289,5 +370,21 @@ public class MainActivity extends Activity implements OnClickListener{
             }
         }
     }
+
+    BroadcastReceiver onNotice = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(LOG_TAG,"onReceive()");
+            String from = intent.getStringExtra("From");
+            String message = intent.getStringExtra("Message");
+
+            Log.d(LOG_TAG, "BroadCast Received:\n" +
+                    "From: " + from + " \nMessage: " + message );
+            if(message.equalsIgnoreCase("STOP")) {
+                stopServerTimeSynchronizer();
+            }
+
+        }
+    };
 }
 

@@ -19,7 +19,7 @@ public interface Constants {
     String AUDIO_TEMP_FILE_NAME = "wear_audio_temp.raw";
     String PHONE_AUDIO_FILE_NAME = "phone_audio.wav";
     String PHONE_AUDIO_TEMP_FILE_NAME = "phone_audio_temp.raw";
-    String AUDIO_TIME_INFO_FILE_NAME = "wear_audio_time.csv";
+    String AUDIO_TIME_INFO_FILE_NAME = "audio_time.csv";
     String WEAR_TIME_SYNC_FILE_NAME = "wear_time_sync.csv";
     String SERVER_TIME_SYNC_FILE_NAME = "server_time_sync.csv";
     String RECORDINGS_DIR = "recordings_dir";

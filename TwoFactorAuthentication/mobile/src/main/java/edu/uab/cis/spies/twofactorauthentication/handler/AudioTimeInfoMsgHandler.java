@@ -31,8 +31,9 @@ public class AudioTimeInfoMsgHandler implements IMessageHandler {
         Log.d(LOG_TAG, "Audio Time Info: " + timeInfoMsg.getStartTimestamp());
         BufferedWriter bfrWriter = null;
         try {
-            bfrWriter = new BufferedWriter(new FileWriter(fileUtility.getAudioTimeInfoFilePath()));
-            bfrWriter.write(String.valueOf(timeInfoMsg.getStartTimestamp()));
+            bfrWriter = new BufferedWriter(new FileWriter(fileUtility.getAudioTimeInfoFilePath(), true));
+            Log.d(LOG_TAG, "wear_audio_start, " + String.valueOf(timeInfoMsg.getStartTimestamp()));
+            bfrWriter.write("\nwear_audio_start," + String.valueOf(timeInfoMsg.getStartTimestamp()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }finally {

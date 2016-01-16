@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -11,6 +12,8 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import edu.uab.cis.spies.twofactorauthentication.Constants;
 import edu.uab.cis.spies.twofactorauthentication.MainActivity;
+import edu.uab.cis.spies.twofactorauthentication.TimeSynchronizer.ServerTimeSynchronizer;
+import edu.uab.cis.spies.twofactorauthentication.utility.FileUtility;
 import edu.uab.cis.spies.twofactorauthentication.wear.WearMessageSender;
 import edu.uab.cis.spies.twofactorlib.common.GCMCommands;
 import edu.uab.cis.spies.twofactorlib.common.WearConstants;
@@ -62,9 +65,11 @@ public class GcmMessageHandler extends IntentService implements GCMCommands
                 String directoryName;
                 if(str.length == 2){
                     directoryName = str[1];
+
                     //send msg to wear to initiate sensor recordings
                     initWearService();
                     Log.d("GcmMsgHandler()", "Start Service received -> " + directoryName);
+
                     Intent dialogIntent = new Intent(getBaseContext(), MainActivity.class);
                     dialogIntent.putExtra(Constants.RECORDINGS_DIR, directoryName);
                     dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -76,12 +81,24 @@ public class GcmMessageHandler extends IntentService implements GCMCommands
             }
             else if(msg.equalsIgnoreCase(GCM_STOP)) {
                 stopWearService();
+                sendMessageToMainActivity("STOP");
                 Log.e("GcmMsgHandler()", "Stop service received");
             }
         }
         Log.i("GCM", "Received : (" + messageType + ")  " + extras.getString("message"));
         GcmBroadcastReceiver.completeWakefulIntent(intent);
     }
+
+    public static final String ACTION="Status";
+    public void sendMessageToMainActivity(String msg){
+         Intent in = new Intent(ACTION);
+         in.putExtra("From", LOG_TAG);
+         in.putExtra("Message", msg);
+         Log.d(LOG_TAG,"sending BroadCast");
+         LocalBroadcastManager.getInstance(this).sendBroadcast(in);
+
+     }
+
     public void showToast(){
         handler.post(new Runnable() {
             public void run() {
@@ -109,7 +126,6 @@ public class GcmMessageHandler extends IntentService implements GCMCommands
     @Override
     public void onDestroy() {
         super.onDestroy();
-
     }
 
 }

@@ -138,6 +138,9 @@ public class FileUtility implements edu.uab.cis.spies.twofactorlib.common.Consta
 
         for(byte typ: type){
             tempFilePath = getCompleteFilePath(typ);
+            int index = findTypeIndex(typ);
+            filePathList.add(index, tempFilePath);
+
             Log.d(LOG_TAG, tempFilePath + " creating...");
             try {
                 File file = new File(tempFilePath);
@@ -145,8 +148,6 @@ public class FileUtility implements edu.uab.cis.spies.twofactorlib.common.Consta
                 if (!file.exists()) {
                     createDirectory(appDir + File.separator + workingDir);
                     file.createNewFile();
-                    int index = findTypeIndex(typ);
-                    filePathList.add(index, tempFilePath);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);

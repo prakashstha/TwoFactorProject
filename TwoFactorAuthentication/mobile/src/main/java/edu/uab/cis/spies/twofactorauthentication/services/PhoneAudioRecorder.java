@@ -8,11 +8,13 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -64,6 +66,9 @@ public class PhoneAudioRecorder extends AsyncTask<Void, Integer, Void> {
                     Constants.AUDIO_CHANNEL_CONFIG, Constants.AUDIO_ENDCODING, bufferSize);
 
             byte[] buffer = new byte[bufferSize];
+
+            recordPhoneAudioStartTime();
+
             audioRecord.startRecording();
             int r = 0;
             while (isRecording) {
@@ -85,6 +90,26 @@ public class PhoneAudioRecorder extends AsyncTask<Void, Integer, Void> {
         }
         return null;
     }
+
+    private void recordPhoneAudioStartTime() {
+
+        BufferedWriter bfrWriter = null;
+        try {
+            bfrWriter = new BufferedWriter(new FileWriter(fileUtility.getAudioTimeInfoFilePath(), true));
+            Log.d(LOG_TAG, "phone_audio_start," + String.valueOf(System.currentTimeMillis()));
+            bfrWriter.write("phone_audio_start," + String.valueOf(System.currentTimeMillis()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }finally {
+            if(bfrWriter!=null)
+                try {
+                    bfrWriter.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+        }
+    }
+
     protected void onProgressUpdate(Integer... progress) {
         //Log.d(LOG_TAG,progress[0].toString());
     }

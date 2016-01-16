@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.Locale;
 
 import edu.uab.cis.spies.twofactorauthentication.WebServer.AsyncResponse;
+import edu.uab.cis.spies.twofactorauthentication.WebServer.PushToServer;
 import edu.uab.cis.spies.twofactorauthentication.WebServer.PushToServer1;
 import edu.uab.cis.spies.twofactorauthentication.utility.FileUtility;
 import edu.uab.cis.spies.twofactorlib.common.ThreadStatus;
@@ -29,7 +30,7 @@ public class ServerTimeSynchronizer extends TwoFactorThread {
     private static final long TIME_SYNC_AFTER_EVERY_MS = 1000;
     private static final long TIME_SYNC_DURATION_MS = 1000;
 
-    private PushToServer1 rttCalc, timeDiff;
+    private PushToServer rttCalc, timeDiff;
     private ResponseHandler delegate;
 
     private static final String RTTCalc = "RTTCalc";
@@ -42,9 +43,11 @@ public class ServerTimeSynchronizer extends TwoFactorThread {
     private FileUtility fileUtility;
     private String serverTimeSyncFilePath;
     private BufferedWriter bfrWriter = null;
+    private ThreadGroup tGroup;
     
     public ServerTimeSynchronizer(ThreadGroup tGroup, FileUtility fileUtility) {
         super(tGroup, LOG_TAG);
+        this.tGroup = tGroup;
         this.fileUtility = fileUtility;
         this.sTimeSyncServerMsgCounter = 0;
         this.sAvgM2STripTime = 0;
@@ -62,11 +65,15 @@ public class ServerTimeSynchronizer extends TwoFactorThread {
     @Override
     public void interrupt() {
         super.interrupt();
+        //interrupt();
         Log.d(LOG_TAG, "Interrupted");
     }
     @Override
     public void mainloop(){
         Log.d(LOG_TAG, ThreadStatus.RUNNING);
+        this.sTimeSyncServerMsgCounter = 0;
+        this.sAvgM2STripTime = 0;
+        this.sAvgM2STimeDiff = 0;
 
         try {
             serverTimeSyncFilePath = fileUtility.getServerTimeSyncFilePath();
@@ -121,11 +128,13 @@ public class ServerTimeSynchronizer extends TwoFactorThread {
 
     private void updateTimeSyncParams() {
 
-        rttCalc = new PushToServer1();
+        String requestTime = String.valueOf(System.currentTimeMillis());
+        String [] args = {PushToServer.RTTCalculation,requestTime};
+        rttCalc = new PushToServer(tGroup, args);
         delegate = new ResponseHandler();
         rttCalc.delegate = this.delegate;
-        String requestTime = String.valueOf(System.currentTimeMillis());
-        rttCalc.execute(PushToServer1.RTTCalculation,requestTime);
+        rttCalc.start();
+     //   rttCalc.execute(PushToServer.RTTCalculation,requestTime);
     }
 
     class ResponseHandler implements AsyncResponse{
@@ -149,9 +158,10 @@ public class ServerTimeSynchronizer extends TwoFactorThread {
 
                     /* writing all data on file */
                     String str = String.format(Locale.getDefault(), "%d,%d,%d,%d,%d", requestTime, responseTime, serverTime, oneWayTimeDelay, sAvgM2STimeDiff);
+//                    Log.e(LOG_TAG, str);
+
                     if(bfrWriter!=null) {
                         try {
-                           // Log.e(LOG_TAG, "writing: " + str);
                             bfrWriter.append(str + "\n");
                             bfrWriter.flush();
                         } catch (IOException e) {

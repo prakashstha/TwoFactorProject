@@ -33,12 +33,12 @@
 				</br></br>
 				Audio file name: 
 				 <select id = 'audioSelect'>
-					  <option value="amazing.wav">amazing</option>
-					  <option value="comeon.wav">comeon</option>
-					  <option value="wajile.wav">wajile</option>
-					  <option value="pass.wav">pass</option>
-					  <option value="loveyou.wav">loveyou</option>
-					  <option value="harmony.wav">harmony</option>
+					  <option value="amazing">amazing</option>
+					  <option value="comeon">comeon</option>
+					  <option value="wajile">wajile</option>
+					  <option value="pass">pass</option>
+					  <option value="loveyou">loveyou</option>
+					  <option value="harmony">harmony</option>
 				</select> 
 					<br/>
 					 <audio id = 'player'>
@@ -97,7 +97,8 @@
 					var start = document.getElementById('start');
 					var place = document.getElementById('place');
 					var password = document.getElementById('password');
-					
+					var audioSelectField = document.getElementById("audioSelect");
+						
 					/* ends of fileName */
 					var audioEnds = 'browser_audio';
 					var audioTimeEnds = 'browser_audio_time';
@@ -118,13 +119,11 @@
 				
 					password.onfocus = function(){
 						console.log('password field focus');
-						console.log(timeVar + ": " + placeValue + ": " + dir);
-						
-						
-						bAudioFile = getFileName(dir, timeVar, placeValue, audioEnds);
-						bAudioTimeFile = getFileName(dir, timeVar, placeValue, audioTimeEnds);
-						bTimeSyncFile = getFileName(dir, timeVar, placeValue, timeSyncEnds);
-						bEventsFile = getFileName(dir, timeVar, placeValue, eventEnds);
+						var audioName = audioSelectField.options[audioSelectField.selectedIndex].value;
+						bAudioFile = getFileName(dir, timeVar, placeValue, audioName, audioEnds);
+						bAudioTimeFile = getFileName(dir, timeVar, placeValue,audioName, audioTimeEnds);
+						bTimeSyncFile = getFileName(dir, timeVar, placeValue, audioName, timeSyncEnds);
+						bEventsFile = getFileName(dir, timeVar, placeValue, audioName, eventEnds);
 						
 						isStart = true;
 						startTime();
@@ -148,10 +147,16 @@
 						var date = new Date();
 						timeVar = date.getTime();
 						
+						var audioName = audioSelectField.options[audioSelectField.selectedIndex].value;
+					
 						/* Send start message to android device with file initials*/
-						var msgToDevice = "start," + timeVar + "_" + placeValue;
+						var msgToDevice = "start," + timeVar + "_" + placeValue + "_" + audioName;
 						 //alert(msgToDevice);
 						sendMessageToDevice(msgToDevice);
+
+						audioSelectField = document.getElementById("audioSelect");
+						audioFileName = 'audio/' + audioSelectField.options[audioSelectField.selectedIndex].value;
+						
 
 						password.disabled = false;
 						start.disabled = true;
@@ -191,9 +196,9 @@
 				    }
 
 				    function playAudio(){
-				    	var audioSelectField = document.getElementById("audioSelect");
-						var audioFileName = 'audio/' + audioSelectField.options[audioSelectField.selectedIndex].value;
-						//alert(audioFileName);
+				    	var audioFileName = 'audio/' + audioSelectField.options[audioSelectField.selectedIndex].value + ".wav";
+					
+				    	//alert(audioFileName);
 						var player=document.getElementById('player');
 					    var sourceWav=document.getElementById('wavSrc');
 					    sourceWav.src=audioFileName;

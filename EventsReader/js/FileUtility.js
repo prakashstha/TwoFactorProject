@@ -4,8 +4,8 @@
 * @placeValue name of place where recordings are made
 * @type type of file -  bTimeSync, bAudio, bAudioTime, bEvents
 */
-function getFileName(dir, timeVar, placeValue, type){
-  var fileName = dir + '/' + timeVar + '_' + placeValue + '_' + type;
+function getFileName(dir, timeVar, placeValue, audioName, type){
+  var fileName = dir + '/' + timeVar + '_' + placeValue + '_' + audioName + '_' + type;
   if(type == 'browser_audio'){
     fileName += '.wav';
   }else{

@@ -4,9 +4,9 @@
       /* field to show the audio recorder info */
       var recorderField = 'AUDIO';
       /* Messages for UI fields*/
-      var AudioStartMessage = "Audio Recording STARTED....";
-      var AudioStopMessage = "Audio Recording STOPPED....";
-	  var AudioNotRecordedMessage = "Audio is NOT RECORDED..."
+      var AudioStartMessage = "Audio Recording: STARTED";
+      var AudioStopMessage = "Audio Recording: STOPPED";
+	  var AudioNotRecordedMessage = "Audio Recording: NOT RECORDED";
 
       /* method to show message in the audio message field in UI */
       /*function showMessage(message){

@@ -1,6 +1,6 @@
 /*CSS File For Sign-In webpage*/
 #body-color{
-background-color:#6699CC;
+background-color:#f6f6ee;
 }
 #Sign-In{
 margin-top:150px;
@@ -36,8 +36,7 @@ font-size:20px
 }
 span{
     margin-left: 10px;
-    color: #b1b1b1;
-    font-size: 11px;
+    font-size: 16px;
     font-style: italic;
 }
 span.error{

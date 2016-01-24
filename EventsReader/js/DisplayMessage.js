@@ -22,5 +22,7 @@ function getFieldID(field){
 		return 'timeSynchronizer';
 	else if(field == 'GCM')
 		return 'gcm';
+	else if(field == 'AUDIO_PLAYER')
+		return 'audioPlayer';
 }
  

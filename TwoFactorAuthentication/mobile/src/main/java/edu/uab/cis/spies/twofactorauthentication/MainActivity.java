@@ -128,44 +128,6 @@ public class MainActivity extends Activity implements OnClickListener{
     }
 
 
-    /* server time synchronizer thread*/
-    private ThreadGroup sThreadGroup = new ThreadGroup("2FA MOBILE");
-    private FileUtility fileUtility = new FileUtility();
-    private ServerTimeSynchronizer serverTimeSynchronizer= new ServerTimeSynchronizer(sThreadGroup, fileUtility);
-
-
-    /* Initialize and start TimeSynchronizer thread*/
-    private void initServerTimeSynchronizer(){
-        Log.d(LOG_TAG, "intiServerTimeSynchronizer()");
-        if(serverTimeSynchronizer == null){
-            serverTimeSynchronizer = new ServerTimeSynchronizer(sThreadGroup, fileUtility);
-        }
-        if(serverTimeSynchronizer.isAlive()){
-            serverTimeSynchronizer.interrupt();
-            serverTimeSynchronizer.stop();
-            while(serverTimeSynchronizer.isAlive()){
-                try{
-                    Thread.sleep(200);
-                }catch(InterruptedException e){
-                    e.printStackTrace();
-                }
-            }
-        }
-        //serverTimeSynchronizer.setDaemon(true);
-        serverTimeSynchronizer.setPriority(Thread.MAX_PRIORITY);
-        serverTimeSynchronizer.start();
-    }
-
-    private void stopServerTimeSynchronizer(){
-        Log.d(LOG_TAG, "stopServerTimeSynchronizer()");
-        if(serverTimeSynchronizer!=null){
-            Log.d(LOG_TAG, "ServerTimeSYnc is not null");
-            if(serverTimeSynchronizer.isAlive()){
-                serverTimeSynchronizer.interrupt();
-
-            }
-        }
-    }
 
     /* On start of application start the service.*/
     @Override
@@ -184,9 +146,6 @@ public class MainActivity extends Activity implements OnClickListener{
             recordingDir = String.valueOf(System.currentTimeMillis()) + "_mobile";
         }
 
-//        fileUtility.setWorkingDir(recordingDir);
-//        fileUtility.createRecordingFiles();
-//        initServerTimeSynchronizer();
 
 
         intentToStartService = new Intent(this,SensorValueService.class);
@@ -208,7 +167,6 @@ public class MainActivity extends Activity implements OnClickListener{
     @Override
     protected void onStop() {
         Log.d(LOG_TAG, "onStop()");
-        stopServerTimeSynchronizer();
         stopServicesIntents();
         super.onStop();
     }
@@ -216,7 +174,6 @@ public class MainActivity extends Activity implements OnClickListener{
     @Override
     protected void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
-        stopServerTimeSynchronizer();
         stopServicesIntents();
         super.onDestroy();
     }
@@ -251,20 +208,6 @@ public class MainActivity extends Activity implements OnClickListener{
     @Override
     public void onClick(View view) {
         getRegID();
-//        run = !run;
-//        if(run){
-//            timeSynchronizer = new ServerTimeSynchronizer();
-//            timeSynchronizer.setDaemon(true);
-//            timeSynchronizer.setPriority(Thread.NORM_PRIORITY);
-//            timeSynchronizer.start();
-//        }
-//        else{
-//            if(timeSynchronizer!=null)
-//                timeSynchronizer.interrupt();
-//        }
-
-//        Intent intent = new Intent(MainActivity.this, NewActivity.class);
-//        startActivity(intent);
     }
 
     public void getRegID() {
@@ -381,7 +324,7 @@ public class MainActivity extends Activity implements OnClickListener{
             Log.d(LOG_TAG, "BroadCast Received:\n" +
                     "From: " + from + " \nMessage: " + message );
             if(message.equalsIgnoreCase("STOP")) {
-                stopServerTimeSynchronizer();
+                //stopServerTimeSynchronizer();
             }
 
         }

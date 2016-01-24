@@ -11,10 +11,10 @@
 	  /* field to show the events recording info */
       var eventsField = 'EVENTS';
 	  /* Messages for UI fields*/
-      var EventsRecordingStartMessage = "Events Recording STARTED....";
-      var EventsRecordingStopMessage = "Events Recording STOPPED....";
-	  var EventsNotRecordedMessage = "Events is NOT RECORDED...";
-	  showMessage(eventsField, EventsNotRecordedMessage);
+      var EventsRecordingStartMessage = "Events Recording: STARTED";
+      var EventsRecordingStopMessage = "Events Recording: STOPPED";
+	  var EventsNotRecordedMessage = "Events Recording: NOT RECORDED";
+	  //showMessage(eventsField, EventsNotRecordedMessage);
 	  
 	  /*************************************
 	   *	EVENTS ID					   *
@@ -41,7 +41,7 @@
 
     //  $("body").on("keyup keydown mousedown mouseup mousemove",function(event){ 
 	function eventsHandler(event){
-		   showMessage(eventsField, 'Initiallizing...');
+		   //showMessage(eventsField, 'Initiallizing...');
 		   event_time = (new Date()).getTime();
 		   eType = event.type;
 		   f_id = event.target.id;

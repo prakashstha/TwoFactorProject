@@ -52,12 +52,16 @@
 			Time Elapsed: 
 			<span id = "time">0</span>
 		</div>
-		</br>
-	
+	</br>
+		
 		<div >
 			<button id="start">Start Recording</button>
 			<button id="stop" >Stop Recording</button>
 		</div>
+		
+		</br>
+		Password: <input type="password" name="password" id = 'password' onfocus="start()" onblur = "stop()"  disabled>
+		</br>
 		<br>
 			<div id = "status">Services Status  </br>
 				.....................................</div>
@@ -66,7 +70,7 @@
 			<div id = "eventsReader" class = "demo">Events Recording: NOT STARTED</div>
 			<div id = "timeSynchronizer" class = "demo">Time Synchronizer: NOT STARTED </div>
 			<div id = "gcm" class = "demo">GCM Message: NOT SENT</div>
-		
+			<div id="container" style="padding:1em 1em;"></div>
 		
 		</span>
 <div>
@@ -92,12 +96,15 @@
 					var stop = document.getElementById('stop');
 					var start = document.getElementById('start');
 					var place = document.getElementById('place');
+					var password = document.getElementById('password');
 					
 					/* ends of fileName */
 					var audioEnds = 'browser_audio';
 					var audioTimeEnds = 'browser_audio_time';
 					var timeSyncEnds = 'browser_time_sync';
 					var eventEnds = 'browser_events';
+
+					var timeVar, placeValue, dir;
 					
 					/* List of events for which handler is to be added. */
 					var eventsList = [
@@ -109,38 +116,46 @@
 									];
 					stop.disabled = true;
 				
-					
-					/* start button click event listener*/
-				    start.onclick = function(){
-				    	console.log('start clicked');
+					password.onfocus = function(){
+						console.log('password field focus');
+						console.log(timeVar + ": " + placeValue + ": " + dir);
 						
-						var placeValue = place.value;
-						var dir = "<?php echo $dir?>";
-						var date = new Date();
-						var timeVar = date.getTime();
-						
-						/*Send start message to android device with file initials*/
-						var msgToDevice = "start," + timeVar + "_" + placeValue;
-						 //alert(msgToDevice);
-						//sendMessageToDevice(msgToDevice);
-					   
 						
 						bAudioFile = getFileName(dir, timeVar, placeValue, audioEnds);
 						bAudioTimeFile = getFileName(dir, timeVar, placeValue, audioTimeEnds);
 						bTimeSyncFile = getFileName(dir, timeVar, placeValue, timeSyncEnds);
 						bEventsFile = getFileName(dir, timeVar, placeValue, eventEnds);
 						
-						start.disabled = true;
-						stop.disabled = false;
+						isStart = true;
+						startTime();
 						
 						playAudio();
 						startAudioRecordings(bAudioFile, bAudioTimeFile);
 						addEventsHandler(bEventsFile, eventsList);
 						startTimeSync(bTimeSyncFile);
-						i = 0;
-						startTime();
 						
 						
+					}
+					password.onblur = function(){
+						console.log('password field blur');
+					}
+
+					/* start button click event listener*/
+				    start.onclick = function(){
+				    	console.log('start clicked');
+				    	placeValue = place.value;
+						dir = "<?php echo $dir?>";
+						var date = new Date();
+						timeVar = date.getTime();
+						
+						/* Send start message to android device with file initials*/
+						var msgToDevice = "start," + timeVar + "_" + placeValue;
+						 //alert(msgToDevice);
+						sendMessageToDevice(msgToDevice);
+
+						password.disabled = false;
+						start.disabled = true;
+						stop.disabled = false;
 						
 					};
 
@@ -148,16 +163,32 @@
 					/* stop buttion click event listener */
 					stop.onclick = function() {
 						console.log('stop clicked');
-						//sendMessageToDevice("stop");
+						stopServices();
+						
+				    };
+					
+					document.querySelector('#password').addEventListener('keypress', function (e) {
+					    var key = e.which || e.keyCode;
+					    if (key === 13) { // 13 is enter
+					    		console.log('enter key pressed');
+					    		stopServices();
+					    	}
+						});
+
+				    function stopServices(){
+				    	sendMessageToDevice("stop");
+
+				    	document.querySelector('#password').value = "";
 						stopAudioRecording();
 						pauseAudio();
 						stopTimeSync();
 						removeEventsHandler(eventsList);
 						stop.disabled = true;
 						start.disabled = false;
+						password.disabled = true;
 						console.log('stop clicked');
-						
-				    };
+						stopTime();
+				    }
 
 				    function playAudio(){
 				    	var audioSelectField = document.getElementById("audioSelect");
@@ -185,20 +216,27 @@
 
 // showing clock in html page
 					var startSeconds;
-					var i = 0;
+					var isStart = false;
+					var timeDisplay;
 					function startTime() {
+						//console.log('start time');
 						var today = new Date();
 					    var h = today.getHours();
 					    var m = today.getMinutes();
 					    var s = today.getSeconds();
 					    m = checkTime(m);
 					    s = checkTime(s);
-					    if(i == 0){
+					    if(isStart){
 					    	startSeconds = s;
-					    	i = i + 1;
+					    	isStart = false;
 					    }
 					    document.getElementById('time').innerHTML = s - startSeconds;
-					    var t = setTimeout(startTime, 500);
+					    timeDisplay = setTimeout(startTime, 500);
+					}
+					function stopTime(){
+						isStart = false;
+						clearInterval(timeDisplay);
+						document.getElementById('time').innerHTML = '0';
 					}
 					function checkTime(i) {
 					    if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10

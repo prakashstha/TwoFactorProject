@@ -94,9 +94,9 @@ public class SensorValueService extends Service implements ChannelApi.ChannelLis
     private final IMessageHandlerFactory sMsgHandlerFactory = new MessageHandlerFactory(sInstructionMsgHandler, sSensorValsMsgHandler,sAudioValsMsgHandler,sAudioTimeInfoMsgHandler, sTimeSynchronizerMsgHandler);
 
     /* Communication channel to communicate with nodes*/
-    volatile private Channel sBTChannel = null;
-    volatile private InputStream sBTInputStream = null;
-    volatile private  OutputStream sBTOutputStream = null;
+    private volatile Channel sBTChannel = null;
+    private volatile InputStream sBTInputStream = null;
+    private volatile  OutputStream sBTOutputStream = null;
     private GoogleApiClient sApiClient;
     private AudioPlayer player = null;
     private PhoneAudioRecorder phoneAudioRecorder= null;
@@ -441,6 +441,16 @@ public class SensorValueService extends Service implements ChannelApi.ChannelLis
 
         fileUtility.createRecordingFiles();
         initBtChannel();
+
+//        afterBtInitialization();
+
+    }
+
+    /*
+    * all the statements in this method were supposed to be inside above method - onChannelOpened()
+    * However due to time synchronization issues with the thread, separate method has been created.
+    * */
+    private void afterBtInitialization() {
         initMessageThreads();
         initTimeSynchronizer();
 
@@ -498,12 +508,44 @@ public class SensorValueService extends Service implements ChannelApi.ChannelLis
         else
             return false;
     }
+
+
+    volatile int setInputOutputStream = 0;
     private class InitCommunicationChannel extends TwoFactorThread{
         private final String LOCAL_TAG = LOG_TAG + "::" + InitCommunicationChannel.class.getSimpleName();
 
         public InitCommunicationChannel(ThreadGroup tGroup){
             super(tGroup, "InitCommunicationChannel");
         }
+
+        public void setBTInputStream(InputStream stream){
+            if(stream!=null){
+                sBTInputStream = stream;
+                setInputOutputStream++;
+                Log.d("setinputoutputstream", String.valueOf(setInputOutputStream));
+                if(setInputOutputStream == 2){
+                    afterBtInitialization();
+                }
+            }else{
+                Log.e("set:", "Null input stream");
+            }
+        }
+        public void setBTOutputStream(OutputStream stream){
+            if(stream!=null){
+                sBTOutputStream = stream;
+                setInputOutputStream++;
+                Log.d("setinputoutputstream", String.valueOf(setInputOutputStream));
+                if(setInputOutputStream == 2){
+                    afterBtInitialization();
+                }
+            }else{
+                Log.e("set:", "Null output stream");
+            }
+
+        }
+
+        private InputStream inStream = null;
+        private OutputStream outStream = null;
         @Override
         public void mainloop() {
             //connect to GoogleApiClient and find connected nodes
@@ -517,10 +559,13 @@ public class SensorValueService extends Service implements ChannelApi.ChannelLis
                         @Override
                         public void onResult(Channel.GetInputStreamResult getInputStreamResult) {
                             if (getInputStreamResult.getStatus().isSuccess()) {
-                                sBTInputStream = getInputStreamResult.getInputStream();
-                                Log.d(LOCAL_TAG,"Bluetooth InputStream initialization succeed.");
+                                inStream = getInputStreamResult.getInputStream();
+                                if (inStream == null) {
+                                    Log.e("check inStream", "NULL");
+                                }
+                                setBTInputStream(inStream);
+                                Log.d(LOCAL_TAG, "Bluetooth InputStream initialization succeed.");
                             } else {
-                                Log.e(LOCAL_TAG, "Bluetooth InputStream initialization failed.");
                                 //sendMessage(ServiceMessage.ERROR, Constants.ERROR,"Bluetooth InputStream initialization failed.");
                                 throw new RuntimeException("Bluetooth InputStream initialization failed.");
                                 // handle errors
@@ -534,11 +579,15 @@ public class SensorValueService extends Service implements ChannelApi.ChannelLis
                         public void onResult(Channel.GetOutputStreamResult getOutputStreamResult) {
 
                             if (getOutputStreamResult.getStatus().isSuccess()) {
-                                sBTOutputStream = getOutputStreamResult.getOutputStream();
-                                Log.e(LOCAL_TAG, "Bluetooth OutputStream initialization succeed.");
+                                outStream = getOutputStreamResult.getOutputStream();
+                                if(outStream == null){
+                                    Log.e("check outStream", "NULL");
+                                }
+                                setBTOutputStream(outStream);
+                                Log.d(LOCAL_TAG, "Bluetooth OutputStream initialization succeed.");
                             }
                             else{
-                                Log.d(LOCAL_TAG,"Bluetooth OutputStream initialization failed.");
+                                Log.e(LOCAL_TAG,"Bluetooth OutputStream initialization failed.");
                                 sendMessage(ServiceMessage.ERROR, Constants.ERROR,"Bluetooth OutputStream initialization failed.");
                                 throw new RuntimeException("Bluetooth OutputStream initialization failed.");
 
@@ -548,31 +597,37 @@ public class SensorValueService extends Service implements ChannelApi.ChannelLis
                     }
             );
         }
+
     }
 
     /*Initialize Bluetooth channel for message transmission*/
     private void initBtChannel() {
-        Thread initCommunicationChannel = new InitCommunicationChannel(sThreadGroup);
+        InitCommunicationChannel initCommunicationChannel = new InitCommunicationChannel(sThreadGroup);
         initCommunicationChannel.setUncaughtExceptionHandler(sThreadExHandler);
-        initCommunicationChannel.setPriority(Thread.NORM_PRIORITY);
+        initCommunicationChannel.setPriority(Thread.MAX_PRIORITY);
         initCommunicationChannel.setDaemon(true);
         initCommunicationChannel.start();
-        int i = 0;
-        /*
-        * Wait for 5 second to initailize bluetooth channel
-        * If it fails to initialize within timelimit, throw error
-        */
-        while(initCommunicationChannel.isAlive())
-        {
-            takeRest(100);
-            i++;
-            if(i>50) {
-                Log.e(LOG_TAG,"Bluetooth channel initialization taking more than expected time. Stopping process");
-                throw new RuntimeException("Could not initialize bluetooth channel");
-            }
-        }
-        Log.d(LOG_TAG, "Initialized bluetooth channel");
 
+//        int i = 0;
+//        /*
+//        * Wait for 5 second to initailize bluetooth channel
+//        * If it fails to initialize within timelimit, throw error
+//        */
+//        while(initCommunicationChannel.isAlive())
+//        {
+//            if(setInputOutputStream!=0)
+//                Log.d(LOG_TAG, "setIntputOutput vvalue: " + setInputOutputStream);
+//            takeRest(200);
+//            i++;
+//            if(i>50) {
+//                Log.e(LOG_TAG,"Bluetooth channel initialization taking more than expected time. Stopping process");
+//                throw new RuntimeException("Could not initialize bluetooth channel");
+//            }
+//        }
+//        if(sBTInputStream == null || sBTOutputStream == null){
+//            Log.e(LOG_TAG, "ERROR IN input output stream bluetooth assignment.");
+//        }
+        Log.d(LOG_TAG, "Initialized bluetooth channel");
     }
 
     class ClientMessageHandler extends Handler{
